@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lash Studio — Профессиональное наращивание ресниц</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{--gold:#c9a96e;--gold-light:#e8d5a3;--gold-dark:#a0824a;--black:#1a1a1a;--dark:#2d2d2d;--cream:#faf8f5;--white:#ffffff;--gray:#888888;--light-gray:#f0f0f0;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Montserrat',sans-serif;background:var(--cream);color:var(--black);overflow-x:hidden;max-width:100vw;font-size:16px}.site-section-hidden{display:none!important}
+h1,h2,h3,h4{font-family:'Cormorant Garamond',serif;font-weight:300}
+
+/* PASSWORD OVERLAY */
+.password-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(26,26,26,0.92);backdrop-filter:blur(10px);z-index:10001;display:none;align-items:center;justify-content:center;animation:fadeIn .3s ease}
+.password-overlay.active{display:flex}
+.password-modal{background:var(--white);padding:50px 40px;text-align:center;max-width:400px;width:90%;animation:modalIn .4s ease}
+.password-modal i{font-size:50px;color:var(--gold);margin-bottom:20px}
+.password-modal h3{font-size:30px;color:var(--black);margin-bottom:10px}
+.password-modal>p{color:var(--gray);font-size:15px;margin-bottom:30px;line-height:1.6}
+.password-hint{font-size:12px;color:var(--gray);margin:0}
+.password-error{font-size:13px;color:#c0392b;margin-top:15px;display:none}
+.password-error.active{display:block}
+
+/* ADMIN PANEL */
+.admin-panel{position:fixed;top:0;right:-420px;width:420px;height:100vh;background:var(--white);box-shadow:-5px 0 30px rgba(0,0,0,0.15);z-index:10000;transition:right .4s ease;overflow-y:auto;display:flex;flex-direction:column}
+.admin-panel.open{right:0}
+.admin-header{background:var(--black);padding:25px 30px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.admin-header h3{color:var(--white);font-size:20px;letter-spacing:2px}
+.admin-header h3 i{color:var(--gold);margin-right:10px}
+.admin-close{background:none;border:none;color:var(--white);font-size:22px;cursor:pointer;transition:color .3s}
+.admin-close:hover{color:var(--gold)}
+.admin-tabs{display:flex;border-bottom:1px solid #eee;background:var(--white);position:sticky;top:70px;z-index:10}
+.admin-tab{flex:1;padding:15px 10px;background:none;border:none;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gray);cursor:pointer;transition:all .3s;border-bottom:2px solid transparent}
+.admin-tab:hover{color:var(--gold)}
+.admin-tab.active{color:var(--gold);border-bottom-color:var(--gold);font-weight:500}
+.admin-content{padding:25px 30px;flex:1}
+.admin-tab-content{display:none}
+.admin-tab-content.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes modalIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
+.admin-group{margin-bottom:25px}
+.admin-group label{display:block;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);margin-bottom:8px;font-weight:500}
+.admin-group input[type="text"],.admin-group input[type="tel"],.admin-group input[type="url"],.admin-group input[type="color"],.admin-group textarea,.admin-group select{width:100%;padding:12px 15px;border:1px solid #e0e0e0;font-family:'Montserrat',sans-serif;font-size:15px;color:var(--black);background:var(--cream);outline:none;transition:border-color .3s}
+.admin-group input:focus,.admin-group textarea:focus,.admin-group select:focus{border-color:var(--gold)}
+.admin-group textarea{resize:vertical;min-height:80px}
+.admin-group input[type="color"]{height:45px;padding:5px;cursor:pointer}
+.admin-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.admin-btn{width:100%;padding:14px;background:var(--gold);color:var(--white);border:none;font-family:'Montserrat',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .3s;margin-bottom:10px}
+.admin-btn:hover{background:var(--gold-dark)}
+.admin-btn.secondary{background:var(--light-gray);color:var(--black)}
+.admin-btn.secondary:hover{background:#ddd}
+.admin-section-title{font-size:15px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin:30px 0 15px;padding-bottom:10px;border-bottom:1px solid #eee}
+.service-editor{background:var(--cream);padding:20px;margin-bottom:15px;border-left:3px solid var(--gold)}
+.service-editor h4{font-size:19px;margin-bottom:15px;color:var(--black)}
+.review-editor{background:var(--cream);padding:20px;margin-bottom:15px;border-left:3px solid var(--gold)}
+.portfolio-editor{background:var(--cream);padding:20px;margin-bottom:15px;border-left:3px solid var(--gold)}
+.admin-notice{background:#fff8e1;border-left:3px solid var(--gold);padding:15px;font-size:13px;color:var(--dark);line-height:1.6;margin-bottom:20px}
+.admin-notice i{color:var(--gold);margin-right:8px}
+.admin-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:9998;display:none;backdrop-filter:blur(3px)}
+.admin-overlay.active{display:block}
+.color-preview{width:30px;height:30px;border-radius:50%;border:2px solid #ddd;display:inline-block;vertical-align:middle;margin-left:10px}
+
+/* SITE */
+.navbar{position:fixed;top:0;left:0;right:0;padding:20px 50px;display:flex;justify-content:space-between;align-items:center;z-index:1000;transition:all .4s ease;background:transparent;box-sizing:border-box}
+.navbar.scrolled{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);box-shadow:0 2px 20px rgba(0,0,0,0.05);padding:15px 50px}
+.logo{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--white);letter-spacing:3px;text-decoration:none;transition:color .3s}
+.navbar.scrolled .logo{color:var(--black)}
+.logo span{color:var(--gold);font-style:italic}
+.nav-links{display:flex;gap:40px;list-style:none}
+.nav-links a{text-decoration:none;color:var(--white);font-size:13px;letter-spacing:2px;text-transform:uppercase;transition:color .3s;position:relative}
+.navbar.scrolled .nav-links a{color:var(--black)}
+.nav-links a::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:1px;background:var(--gold);transition:width .3s}
+.nav-links a:hover::after{width:100%}
+.nav-links a:hover{color:var(--gold)}
+.mobile-menu-btn{display:none;background:none;border:none;color:var(--white);font-size:24px;cursor:pointer}
+.navbar.scrolled .mobile-menu-btn{color:var(--black)}
+
+.hero{height:100vh;background:linear-gradient(135deg,rgba(26,26,26,0.7) 0%,rgba(45,45,45,0.5) 100%),url('https://kimi-web-img.moonshot.cn/img/cdn.shopify.com/4c0b560e4b8b776648fb2cfdf4ecaa95e0fd2567.jpg') center/cover;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at center,transparent 0%,rgba(0,0,0,0.3) 100%)}
+.hero-content{position:relative;z-index:2;animation:fadeInUp 1.2s ease;width:100%;padding:0 20px;box-sizing:border-box}
+.hero-subtitle{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold-light);letter-spacing:8px;text-transform:uppercase;margin-bottom:20px;opacity:0;animation:fadeInUp 1s ease .3s forwards}
+.hero-title{font-size:76px;color:var(--white);font-weight:300;line-height:1.1;margin-bottom:30px;letter-spacing:2px;opacity:0;animation:fadeInUp 1s ease .5s forwards;word-wrap:break-word}
+.hero-title span{font-style:italic;color:var(--gold)}
+.hero-desc{font-size:17px;color:rgba(255,255,255,0.8);max-width:500px;margin:0 auto 40px;line-height:1.8;font-weight:300;opacity:0;animation:fadeInUp 1s ease .7s forwards}
+.hero-btn{display:inline-block;padding:18px 50px;background:var(--gold);color:var(--white);text-decoration:none;font-size:13px;letter-spacing:3px;text-transform:uppercase;border:1px solid var(--gold);transition:all .4s ease;cursor:pointer;opacity:0;animation:fadeInUp 1s ease .9s forwards}
+.hero-btn:hover{background:transparent;color:var(--gold);transform:translateY(-3px);box-shadow:0 10px 30px rgba(201,169,110,0.3)}
+.scroll-indicator{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);color:var(--white);font-size:24px;animation:bounce 2s infinite;cursor:pointer}
+@keyframes bounce{0%,20%,50%,80%,100%{transform:translateX(-50%) translateY(0)}40%{transform:translateX(-50%) translateY(-15px)}60%{transform:translateX(-50%) translateY(-8px)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+
+.section{padding:120px 50px;max-width:1400px;margin:0 auto}
+.section-header{text-align:center;margin-bottom:80px}
+.section-label{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold);letter-spacing:6px;text-transform:uppercase;margin-bottom:15px}
+.section-title{font-size:50px;color:var(--black);font-weight:300;line-height:1.2}
+.section-title span{font-style:italic;color:var(--gold)}
+.divider{width:60px;height:1px;background:var(--gold);margin:25px auto}
+
+.about{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;max-width:1400px;margin:0 auto}
+.about-image{position:relative}
+.about-image img{width:100%;height:600px;object-fit:cover}
+.about-image::before{content:'';position:absolute;top:30px;left:30px;right:-30px;bottom:-30px;border:1px solid var(--gold);z-index:-1}
+.about-content h3{font-size:38px;margin-bottom:25px;color:var(--black)}
+.about-content p{font-size:16px;line-height:1.9;color:var(--gray);margin-bottom:20px;font-weight:300}
+.about-features{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:40px}
+.about-feature{display:flex;align-items:flex-start;gap:15px}
+.about-feature i{color:var(--gold);font-size:20px;margin-top:3px}
+.about-feature h4{font-size:17px;margin-bottom:5px;color:var(--black)}
+.about-feature p{font-size:14px;margin:0}
+
+.services-section{background:var(--black);padding:120px 50px}.services-section .section-header{max-width:1400px;margin:0 auto}
+.services-section .section-title{color:var(--white)}
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;max-width:1400px;margin:0 auto;align-items:stretch}
+.service-card{background:var(--dark);padding:50px 35px;text-align:center;border:1px solid rgba(201,169,110,0.1);transition:all .4s ease;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between}
+.service-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:var(--gold);transform:scaleX(0);transition:transform .4s ease}
+.service-card:hover::before{transform:scaleX(1)}
+.service-card:hover{transform:translateY(-10px);border-color:rgba(201,169,110,0.3);box-shadow:0 20px 40px rgba(0,0,0,0.3)}
+.service-icon{width:70px;height:70px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 25px;color:var(--gold);font-size:24px;transition:all .4s}
+.service-card:hover .service-icon{background:var(--gold);color:var(--white)}
+.service-card h3{font-size:26px;color:var(--white);margin-bottom:15px}
+.service-card p{font-size:15px;color:rgba(255,255,255,0.6);line-height:1.7;margin-bottom:25px;font-weight:300}
+.service-price{font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--gold);font-weight:300}
+.service-price span{font-size:16px;color:rgba(255,255,255,0.5)}
+
+.portfolio-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;max-width:1400px;margin:0 auto}
+.portfolio-item{position:relative;overflow:hidden;aspect-ratio:3/4;cursor:pointer}
+.portfolio-item img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease}
+.portfolio-item:hover img{transform:scale(1.1)}
+.portfolio-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(26,26,26,0.7);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .4s ease}
+.portfolio-item:hover .portfolio-overlay{opacity:1}
+.portfolio-overlay h4{color:var(--white);font-size:24px;margin-bottom:10px}
+.portfolio-overlay p{color:var(--gold);font-size:15px;letter-spacing:2px;text-transform:uppercase}
+
+.reviews-section{background:var(--light-gray);padding:120px 50px}.reviews-section .section-header{max-width:1400px;margin:0 auto}.reviews-slider{max-width:900px;margin:0 auto}
+.reviews-slider{max-width:900px;margin:0 auto;position:relative}
+.review-card{text-align:center;padding:40px;display:none}
+.review-card.active{display:block;animation:fadeIn .5s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.review-stars{color:var(--gold);font-size:18px;margin-bottom:25px}
+.review-text{font-family:'Cormorant Garamond',serif;font-size:26px;font-style:italic;color:var(--black);line-height:1.6;margin-bottom:30px;font-weight:300}
+.review-author{font-size:15px;color:var(--gray);letter-spacing:2px;text-transform:uppercase}
+.review-dots{display:flex;justify-content:center;gap:12px;margin-top:40px}
+.review-dot{width:10px;height:10px;border-radius:50%;background:var(--gray);cursor:pointer;transition:all .3s}
+.review-dot.active{background:var(--gold);transform:scale(1.3)}
+
+.booking-section{background:linear-gradient(135deg,var(--black) 0%,var(--dark) 100%);padding:120px 50px;position:relative;overflow:hidden}
+.booking-section::before{content:'';position:absolute;top:-50%;right:-20%;width:600px;height:600px;background:radial-gradient(circle,rgba(201,169,110,0.05) 0%,transparent 70%)}
+.booking-container{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;position:relative;z-index:2;padding:0}
+.booking-info h2{font-size:44px;color:var(--white);margin-bottom:20px}
+.booking-info h2 span{font-style:italic;color:var(--gold)}
+.booking-info p{color:rgba(255,255,255,0.6);line-height:1.8;margin-bottom:40px;font-weight:300;font-size:16px}
+.booking-contacts{display:flex;flex-direction:column;gap:25px}
+.booking-contact{display:flex;align-items:center;gap:20px}
+.booking-contact i{width:50px;height:50px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:18px;flex-shrink:0}
+.booking-contact div h4{color:var(--white);font-size:17px;margin-bottom:5px}
+.booking-contact div p{color:rgba(255,255,255,0.5);font-size:15px;margin:0}
+
+.booking-form{background:var(--white);padding:50px;border-radius:0}
+.booking-form h3{font-size:30px;margin-bottom:10px;color:var(--black)}
+.booking-form>p{color:var(--gray);font-size:15px;margin-bottom:35px}
+.form-group{margin-bottom:25px}
+.form-group label{display:block;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:10px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:15px 0;border:none;border-bottom:1px solid #ddd;font-family:'Montserrat',sans-serif;font-size:16px;color:var(--black);background:transparent;outline:none;transition:border-color .3s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-bottom-color:var(--gold)}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:25px}
+.submit-btn{width:100%;padding:18px;background:var(--gold);color:var(--white);border:none;font-family:'Montserrat',sans-serif;font-size:14px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .4s;margin-top:10px}
+.submit-btn:hover{background:var(--gold-dark);transform:translateY(-2px);box-shadow:0 10px 30px rgba(201,169,110,0.3)}
+
+.footer{background:var(--black);padding:120px 50px 30px;text-align:center}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--white);letter-spacing:4px;margin-bottom:30px}
+.footer-logo span{color:var(--gold);font-style:italic}
+.footer-social{display:flex;justify-content:center;gap:25px;margin-bottom:40px}
+.footer-social a{width:45px;height:45px;border:1px solid rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--white);text-decoration:none;transition:all .3s}
+.footer-social a:hover{background:var(--gold);border-color:var(--gold);transform:translateY(-3px)}
+.footer-links{display:flex;justify-content:center;gap:40px;margin-bottom:40px;flex-wrap:wrap}
+.footer-links a{color:rgba(255,255,255,0.5);text-decoration:none;font-size:14px;letter-spacing:2px;text-transform:uppercase;transition:color .3s}
+.footer-links a:hover{color:var(--gold)}
+.footer-copy{color:rgba(255,255,255,0.3);font-size:14px;padding-top:30px;border-top:1px solid rgba(255,255,255,0.1)}
+#footerAdminLink{color:rgba(255,255,255,0.3);font-size:13px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:color .3s}
+#footerAdminLink:hover{color:var(--gold)}
+
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(5px)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--white);padding:60px;text-align:center;max-width:500px;width:90%;animation:modalIn .4s ease}
+.modal i{font-size:60px;color:var(--gold);margin-bottom:25px}
+.modal h3{font-size:28px;margin-bottom:15px;color:var(--black)}
+.modal p{color:var(--gray);margin-bottom:30px;line-height:1.7}
+.modal-btn{padding:15px 40px;background:var(--gold);color:var(--white);border:none;font-family:'Montserrat',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .3s}
+.modal-btn:hover{background:var(--gold-dark)}
+
+.reveal{opacity:0;transform:translateY(40px);transition:all .8s ease}
+.reveal.active{opacity:1;transform:translateY(0)}
+
+.password-input-group{display:flex;border:1px solid #ddd;margin-bottom:15px;transition:border-color .3s;align-items:stretch;overflow:hidden;position:relative;height:50px}
+.password-input-group:focus-within{border-color:var(--gold)}
+.password-input-group input{flex:1;padding:0 15px;border:none;font-family:'Montserrat',sans-serif;font-size:16px;color:var(--black);background:transparent;outline:none;min-width:0;height:100%;width:calc(100% - 50px);box-sizing:border-box}
+.password-input-group button{position:absolute;right:0;top:0;width:50px;height:50px;background:var(--gold);color:var(--white);border:none;cursor:pointer;transition:background .3s;display:flex;align-items:center;justify-content:center;padding:0;margin:0}
+.password-input-group button svg{display:block;flex-shrink:0}
+.password-input-group button:hover{background:var(--gold-dark)}
+@media(max-width:1024px){.about,.booking-container{grid-template-columns:1fr;gap:50px}.services-grid{grid-template-columns:repeat(2,1fr)}.portfolio-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){
+.navbar{padding:15px 20px;left:0;right:0}
+.nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:var(--white);flex-direction:column;padding:20px;gap:20px;box-shadow:0 10px 30px rgba(0,0,0,0.1)}
+.nav-links.active{display:flex}
+.nav-links a{color:var(--black)!important}
+.mobile-menu-btn{display:block}
+.hero-title{font-size:32px;line-height:1.2;word-break:break-word}
+.hero-subtitle{font-size:14px;letter-spacing:4px}
+.hero-desc{font-size:14px;padding:0 20px;max-width:100%}
+.hero-btn{padding:16px 35px;font-size:12px}
+.section{padding:60px 20px}
+.services-section{padding:60px 20px}
+.reviews-section{padding:60px 20px}
+.booking-section{padding:60px 20px}
+.footer{padding:60px 20px 30px}
+.section-title{font-size:32px}
+.section-label{font-size:14px;letter-spacing:4px}
+.about{grid-template-columns:1fr;gap:40px;padding:0}
+.about-image img{height:auto;max-height:400px}
+.about-content h3{font-size:26px}
+.about-content p{font-size:14px}
+.about-features{grid-template-columns:1fr 1fr;gap:15px}
+.about-feature h4{font-size:14px}
+.about-feature p{font-size:12px}
+.services-grid{grid-template-columns:1fr;gap:20px}
+.service-card{padding:35px 25px}
+.service-card h3{font-size:20px}
+.service-card p{font-size:13px}
+.service-price{font-size:26px}
+.portfolio-grid{grid-template-columns:1fr 1fr;gap:10px}
+.portfolio-overlay h4{font-size:16px}
+.portfolio-overlay p{font-size:12px}
+.review-text{font-size:18px;padding:0 10px}
+.review-author{font-size:12px}
+.review-card{padding:30px 20px}
+.booking-container{grid-template-columns:1fr;gap:40px;padding:0}
+.booking-info h2{font-size:28px}
+.booking-info p{font-size:14px;padding:0}
+.booking-form{padding:30px 20px}
+.booking-form h3{font-size:22px}
+.form-row{grid-template-columns:1fr;gap:15px}
+.form-group input,.form-group select,.form-group textarea{font-size:14px}
+.booking-contact i{width:40px;height:40px;font-size:16px}
+.booking-contact div h4{font-size:14px}
+.booking-contact div p{font-size:13px}
+.footer-logo{font-size:24px}
+.footer-links{gap:20px}
+.footer-links a{font-size:12px}
+.footer-social a{width:40px;height:40px}
+.footer-copy{font-size:12px}
+.admin-panel{width:100%;right:-100%;max-width:100vw}
+.admin-header{padding:18px 20px}
+.admin-header h3{font-size:16px}
+.admin-tabs{top:58px}
+.admin-tab{padding:12px 6px;font-size:10px;letter-spacing:0.5px}
+.admin-content{padding:20px 15px}
+.admin-group input,.admin-group textarea,.admin-group select{padding:10px 12px;font-size:14px}
+.admin-row{grid-template-columns:1fr}
+.service-editor,.review-editor,.portfolio-editor{padding:15px}
+.service-editor h4,.review-editor h4,.portfolio-editor h4{font-size:16px}
+.admin-btn{padding:12px;font-size:11px}
+.password-modal{padding:35px 25px;max-width:340px}
+.password-modal h3{font-size:24px}
+.password-modal>p{font-size:14px}
+.site-custom-section{padding:60px 20px}
+.custom-section-editor{padding:15px}
+.section-actions{flex-direction:column}
+}
+
+.delete-btn{background:#e74c3c;color:#fff;border:none;padding:8px 16px;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:background .3s;margin-top:10px;width:100%}
+.delete-btn:hover{background:#c0392b}
+.add-btn{background:#27ae60;color:#fff;border:none;padding:10px 16px;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:background .3s;margin-top:15px;width:100%}
+.add-btn:hover{background:#219a52}
+.section-toggle{display:flex;align-items:center;justify-content:space-between;background:var(--cream);padding:18px 20px;margin-bottom:12px;border-left:3px solid var(--gold);cursor:pointer;transition:all .3s}
+.section-toggle:hover{background:#f5f0e8}
+.section-toggle.hidden-section{border-left-color:#e74c3c;opacity:.6}
+.section-toggle-name{font-size:16px;font-weight:500;color:var(--black);font-family:'Montserrat',sans-serif}
+.section-toggle-status{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--gray);font-weight:500}
+.section-toggle.hidden-section .section-toggle-status{color:#e74c3c}
+.section-toggle-icon{width:36px;height:36px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-right:15px}
+.section-toggle.hidden-section .section-toggle-icon{background:#e74c3c}
+.section-toggle-left{display:flex;align-items:center;gap:12px}
+.custom-section-editor{background:var(--cream);padding:20px;margin-bottom:15px;border-left:3px solid var(--gold)}
+.custom-section-editor h4{font-size:19px;margin-bottom:15px;color:var(--black)}
+.custom-section-preview{background:var(--white);padding:20px;margin-top:15px;border:1px solid #eee}
+.custom-section-preview h3{font-size:22px;margin-bottom:10px;color:var(--black)}
+.custom-section-preview p{font-size:14px;color:var(--gray);line-height:1.7}
+.section-actions{display:flex;gap:10px;margin-top:15px}
+.section-actions .admin-btn{flex:1;margin-bottom:0}
+.section-actions .delete-btn{flex:1;margin-top:0}
+.new-section-placeholder{background:var(--cream);border:2px dashed var(--gold);padding:30px;text-align:center;margin-bottom:15px;cursor:pointer;transition:all .3s}
+.new-section-placeholder:hover{background:#f5f0e8;border-color:var(--gold-dark)}
+.new-section-placeholder i{font-size:30px;color:var(--gold);margin-bottom:10px;display:block}
+.new-section-placeholder p{color:var(--gray);font-size:14px;margin:0}
+.custom-section-item{position:relative}
+.custom-section-item .delete-section-btn{position:absolute;top:10px;right:10px;background:#e74c3c;color:#fff;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:2;transition:background .3s}
+.custom-section-item .delete-section-btn:hover{background:#c0392b}
+.site-custom-section{padding:120px 50px;max-width:1400px;margin:0 auto}
+.site-custom-section .section-header{text-align:center;margin-bottom:80px}
+.site-custom-section .section-content{max-width:800px;margin:0 auto;font-size:15px;line-height:1.9;color:var(--gray)}
+.image-upload-area{border:2px dashed #ddd;padding:30px;text-align:center;cursor:pointer;transition:all .3s;background:var(--cream);margin-bottom:15px;position:relative;overflow:hidden;min-height:120px;display:flex;align-items:center;justify-content:center}
+.image-upload-area:hover{border-color:var(--gold);background:#f5f0e8}
+.image-upload-area.has-image{border-style:solid;border-color:var(--gold);padding:0;cursor:pointer}
+.image-upload-area.has-image:hover{opacity:.9}
+.image-upload-area img{width:100%;height:200px;object-fit:cover;display:block}
+.image-upload-area i{font-size:30px;color:var(--gold);margin-bottom:10px;display:block}
+.image-upload-area p{color:var(--gray);font-size:14px;margin:0}
+.image-upload-area input[type="file"]{position:absolute;top:0;left:0;right:0;bottom:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2}
+.image-upload-preview{position:relative}
+.image-upload-preview .remove-img{position:absolute;top:10px;right:10px;background:var(--gold);color:#fff;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;z-index:10;transition:all .3s;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.image-upload-preview .remove-img:hover{background:var(--gold-dark);transform:scale(1.1)}
+.admin-group .image-upload-area{padding:20px;margin-top:8px}
+.admin-group .image-upload-area i{font-size:24px}
+.admin-group .image-upload-area img{height:150px}
+.cs-image-preview{width:100%;margin-top:10px;border-radius:0;overflow:hidden}
+.cs-image-preview img{width:100%;height:180px;object-fit:cover;display:block}
+.review-editor.deleted{opacity:.4;pointer-events:none;position:relative}
+.review-editor.deleted::after{content:'УДАЛЕНО';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#e74c3c;color:#fff;padding:8px 20px;font-size:12px;letter-spacing:2px;font-weight:600}
+.review-card.hidden{display:none!important}
+.portfolio-editor{position:relative}
+.portfolio-editor .delete-section-btn{position:absolute;top:10px;right:10px;background:#e74c3c;color:#fff;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:2;transition:background .3s}
+.portfolio-editor .delete-section-btn:hover{background:#c0392b}
+@media(max-width:480px){.password-input-group{height:45px}
+.password-input-group input{padding:0 12px;font-size:15px;width:calc(100% - 45px)}
+.password-input-group button{width:45px;height:45px}
+
+.admin-tabs{flex-wrap:wrap}
+.admin-tab{flex:1 1 33%;padding:10px 4px;font-size:9px}
+.admin-content{padding:15px 12px}
+.admin-section-title{font-size:12px;margin:20px 0 10px}
+.admin-group label{font-size:10px}
+.admin-group{margin-bottom:18px}
+.password-modal{padding:30px 20px;width:calc(100% - 30px);margin:0 15px}
+.password-modal i{font-size:40px}
+.password-modal h3{font-size:20px}
+.site-custom-section{padding:50px 15px}
+.custom-section-editor{padding:15px}
+.section-actions{flex-direction:column}
+.hero-title{font-size:26px}
+.hero-subtitle{font-size:12px;letter-spacing:3px}
+.section-title{font-size:26px}
+.section{padding:50px 15px}
+.services-section{padding:50px 15px}
+.reviews-section{padding:50px 15px}
+.booking-section{padding:50px 15px}
+.footer{padding:50px 15px 25px}
+.about-features{grid-template-columns:1fr}
+.portfolio-grid{grid-template-columns:1fr}
+.service-card{padding:30px 20px}
+.review-text{font-size:16px}
+.booking-form{padding:25px 15px}
+.form-group label{font-size:11px}
+.submit-btn{padding:16px;font-size:12px}
+.footer-links{flex-direction:column;gap:15px}
+}
+</style>
+</head>
+<body>
+<!-- PASSWORD OVERLAY -->
+<div class="password-overlay" id="passwordOverlay">
+<div class="password-modal">
+<i class="fas fa-lock"></i>
+<h3>Админ панель</h3>
+<p>Введите пароль для доступа к редактированию сайта</p>
+<div class="password-input-group">
+<input type="password" id="adminPassword" placeholder="Введите пароль" autocomplete="off">
+<button id="passwordSubmit" type="button">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto">
+<line x1="5" y1="12" x2="19" y2="12"></line>
+<polyline points="12 5 19 12 12 19"></polyline>
+</svg>
+</button>
+</div>
+
+<p class="password-error" id="passwordError">Неверный пароль. Попробуйте снова.</p>
+</div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="admin-overlay" id="adminOverlay"></div>
+<div class="admin-panel" id="adminPanel">
+<div class="admin-header">
+<h3><i class="fas fa-sliders-h"></i> Админ панель</h3>
+<button class="admin-close" id="adminClose"><i class="fas fa-times"></i></button>
+</div>
+<div class="admin-tabs">
+<button class="admin-tab active" data-tab="general">Основное</button>
+<button class="admin-tab" data-tab="services">Услуги</button>
+<button class="admin-tab" data-tab="reviews">Отзывы</button>
+<button class="admin-tab" data-tab="portfolio">Портфолио</button>
+<button class="admin-tab" data-tab="sections">Разделы</button>
+<button class="admin-tab" data-tab="contacts">Контакты</button>
+</div>
+<div class="admin-content">
+
+<div class="admin-tab-content active" id="tab-general">
+<div class="admin-notice"><i class="fas fa-info-circle"></i>Все изменения применяются мгновенно. Нажмите "Сохранить" чтобы сохранить настройки в браузере.</div>
+<div class="admin-section-title">Название и логотип</div>
+<div class="admin-group"><label>Название студии</label><input type="text" id="adminStudioName" value="LASH Studio"></div>
+<div class="admin-group"><label>Подпись к логотипу (курсив)</label><input type="text" id="adminStudioTagline" value="Studio"></div>
+<div class="admin-section-title">Главный экран</div>
+<div class="admin-group"><label>Подзаголовок</label><input type="text" id="adminHeroSubtitle" value="Премиум класса"></div>
+<div class="admin-group"><label>Заголовок (до курсивной части)</label><input type="text" id="adminHeroTitle1" value="Наращивание ресниц"></div>
+<div class="admin-group"><label>Заголовок (курсивная часть)</label><input type="text" id="adminHeroTitle2" value="мечты"></div>
+<div class="admin-group"><label>Описание</label><textarea id="adminHeroDesc">Создаю идеальный взгляд, который подчеркнёт вашу естественную красоту. Индивидуальный подход и только качественные материалы.</textarea></div>
+<div class="admin-group"><label>Текст кнопки</label><input type="text" id="adminHeroBtn" value="Записаться онлайн"></div>
+<div class="admin-group"><label>Фоновое изображение</label><div class="image-upload-area" data-target="heroBg"><input type="file" accept="image/*"><i class="fas fa-camera"></i><p>Нажмите чтобы выбрать фото</p></div><input type="hidden" id="adminHeroBg" value="https://kimi-web-img.moonshot.cn/img/cdn.shopify.com/4c0b560e4b8b776648fb2cfdf4ecaa95e0fd2567.jpg"></div>
+<div class="admin-section-title">О мастере</div>
+<div class="admin-group"><label>Имя мастера</label><input type="text" id="adminMasterName" value="Анастасия"></div>
+<div class="admin-group"><label>Описание (первый абзац)</label><textarea id="adminAboutText1">Привет! Меня зовут Анастасия, и я профессиональный lash-мастер с 5-летним опытом работы. Моя цель — создать для вас идеальный взгляд, который будет выглядеть естественно и эффектно одновременно.</textarea></div>
+<div class="admin-group"><label>Описание (второй абзац)</label><textarea id="adminAboutText2">Я работаю только с премиальными материалами от ведущих производителей и постоянно повышаю квалификацию, изучая новейшие техники наращивания. Каждая клиентка для меня — это индивидуальность, требующая особого подхода.</textarea></div>
+<div class="admin-group"><label>Фото мастера</label><div class="image-upload-area" data-target="masterPhoto"><input type="file" accept="image/*"><i class="fas fa-camera"></i><p>Нажмите чтобы выбрать фото</p></div><input type="hidden" id="adminMasterPhoto" value="https://kimi-web-img.moonshot.cn/img/www.thelashlounge.com/fd0c3782073d8c59a12fe29f6e69c4afb92c0b3a.jpg"></div>
+<div class="admin-section-title">Цвета сайта</div>
+<div class="admin-row">
+<div class="admin-group"><label>Акцентный цвет <span class="color-preview" id="colorPreviewGold" style="background:#c9a96e"></span></label><input type="color" id="adminColorGold" value="#c9a96e"></div>
+<div class="admin-group"><label>Тёмный фон <span class="color-preview" id="colorPreviewBlack" style="background:#1a1a1a"></span></label><input type="color" id="adminColorBlack" value="#1a1a1a"></div>
+</div>
+<button class="admin-btn" id="saveGeneral">Сохранить настройки</button>
+<button class="admin-btn secondary" id="resetGeneral">Сбросить по умолчанию</button>
+</div>
+
+<div class="admin-tab-content" id="tab-services">
+<div class="admin-notice"><i class="fas fa-info-circle"></i>Редактируйте название, описание и цену каждой услуги. Изменения применяются сразу.</div>
+<div id="servicesEditor">
+<div class="service-editor" data-index="0"><h4>Услуга 1</h4><div class="admin-group"><label>Название</label><input type="text" class="svc-name" value="Классическое"></div><div class="admin-group"><label>Описание</label><textarea class="svc-desc">Один к одному — идеально для первого наращивания. Естественный эффект, подходит для повседневного образа.</textarea></div><div class="admin-group"><label>Цена</label><input type="text" class="svc-price" value="150 BYN"></div><div class="admin-group"><label>Иконка (FontAwesome класс)</label><input type="text" class="svc-icon" value="fas fa-eye"></div></div>
+<div class="service-editor" data-index="1"><h4>Услуга 2</h4><div class="admin-group"><label>Название</label><input type="text" class="svc-name" value="2D Объёмное"></div><div class="admin-group"><label>Описание</label><textarea class="svc-desc">Два реснички на одну натуральную. Выразительный взгляд с лёгким эффектом накрашенных ресниц.</textarea></div><div class="admin-group"><label>Цена</label><input type="text" class="svc-price" value="200 BYN"></div><div class="admin-group"><label>Иконка (FontAwesome класс)</label><input type="text" class="svc-icon" value="fas fa-feather-alt"></div></div>
+<div class="service-editor" data-index="2"><h4>Услуга 3</h4><div class="admin-group"><label>Название</label><input type="text" class="svc-name" value="3D Объёмное"></div><div class="admin-group"><label>Описание</label><textarea class="svc-desc">Три реснички на одну натуральную. Яркий, насыщенный взгляд для особых случаев и фотосессий.</textarea></div><div class="admin-group"><label>Цена</label><input type="text" class="svc-price" value="250 BYN"></div><div class="admin-group"><label>Иконка (FontAwesome класс)</label><input type="text" class="svc-icon" value="fas fa-star"></div></div>
+<div class="service-editor" data-index="3"><h4>Услуга 4</h4><div class="admin-group"><label>Название</label><input type="text" class="svc-name" value="4D-5D Hollywood"></div><div class="admin-group"><label>Описание</label><textarea class="svc-desc">Максимальный объём и пушистость. Эффект накладных ресниц без тяжести и дискомфорта.</textarea></div><div class="admin-group"><label>Цена</label><input type="text" class="svc-price" value="300 BYN"></div><div class="admin-group"><label>Иконка (FontAwesome класс)</label><input type="text" class="svc-icon" value="fas fa-crown"></div></div>
+<div class="service-editor" data-index="4"><h4>Услуга 5</h4><div class="admin-group"><label>Название</label><input type="text" class="svc-name" value="Ламинирование"></div><div class="admin-group"><label>Описание</label><textarea class="svc-desc">Процедура для натуральных ресниц: подкручивание, окрашивание и питание. Эффект до 8 недель.</textarea></div><div class="admin-group"><label>Цена</label><input type="text" class="svc-price" value="180 BYN"></div><div class="admin-group"><label>Иконка (FontAwesome класс)</label><input type="text" class="svc-icon" value="fas fa-magic"></div></div>
+<div class="service-editor" data-index="5"><h4>Услуга 6</h4><div class="admin-group"><label>Название</label><input type="text" class="svc-name" value="Коррекция"></div><div class="admin-group"><label>Описание</label><textarea class="svc-desc">Обновление наращенных ресниц через 2-3 недели. Удаление отросших и добавление новых.</textarea></div><div class="admin-group"><label>Цена</label><input type="text" class="svc-price" value="от 100 BYN"></div><div class="admin-group"><label>Иконка (FontAwesome класс)</label><input type="text" class="svc-icon" value="fas fa-sync-alt"></div></div>
+</div>
+<button class="admin-btn" id="saveServices">Сохранить услуги</button>
+</div>
+
+<div class="admin-tab-content" id="tab-reviews">
+<div class="admin-notice"><i class="fas fa-info-circle"></i>Редактируйте тексты отзывов и имена клиенток.</div>
+<div id="reviewsEditor">
+<div class="review-editor" data-index="0"><h4>Отзыв 1</h4><button class="delete-btn" data-review="0"><i class="fas fa-trash"></i> Удалить отзыв</button><div class="admin-group"><label>Текст отзыва</label><textarea class="review-text">"Хожу к Насте уже больше года и ни разу не пожалела! Ресницы держатся идеально, а взгляд получается просто волшебным. Она всегда подбирает форму именно под мои глаза."</textarea></div><div class="admin-group"><label>Имя клиентки</label><input type="text" class="review-author" value="— Екатерина М."></div></div>
+<div class="review-editor" data-index="1"><h4>Отзыв 2</h4><button class="delete-btn" data-review="1"><i class="fas fa-trash"></i> Удалить отзыв</button><div class="admin-group"><label>Текст отзыва</label><textarea class="review-text">"Наконец-то нашла своего мастера! Очень аккуратная работа, никакого дискомфорта во время процедуры. Реснички выглядят натурально, но при этом очень выразительно."</textarea></div><div class="admin-group"><label>Имя клиентки</label><input type="text" class="review-author" value="— Анна С."></div></div>
+<div class="review-editor" data-index="2"><h4>Отзыв 3</h4><button class="delete-btn" data-review="2"><i class="fas fa-trash"></i> Удалить отзыв</button><div class="admin-group"><label>Текст отзыва</label><textarea class="review-text">"Пробовала много мастеров, но здесь — совершенно другой уровень. 3D объём держится больше месяца! Атмосфера в студии очень уютная и расслабляющая."</textarea></div><div class="admin-group"><label>Имя клиентки</label><input type="text" class="review-author" value="— Марина К."></div></div>
+</div>
+<button class="add-btn" id="addReview"><i class="fas fa-plus"></i> Добавить отзыв</button>
+<button class="admin-btn" id="saveReviews">Сохранить отзывы</button>
+</div>
+
+<div class="admin-tab-content" id="tab-portfolio">
+<div class="admin-notice"><i class="fas fa-info-circle"></i>Загрузите фото с устройства или выберите из галереи. Нажмите на кнопку ⟳ чтобы заменить фото.</div>
+<div id="portfolioEditor">
+<div class="portfolio-editor" data-index="0"><button class="delete-section-btn" title="Удалить работу"><i class="fas fa-times"></i></button><h4>Работа 1</h4><div class="admin-group"><label>Изображение</label><div class="image-upload-area" data-target="port0"><input type="file" accept="image/*"><i class="fas fa-camera"></i><p>Нажмите чтобы выбрать фото</p></div><input type="hidden" class="port-img" value="https://kimi-web-img.moonshot.cn/img/simplygorgeousbyerin.com/edd06d8d7063001ad27094c1c9cdee4e950a56a2.jpg"></div><div class="admin-group"><label>Название работы</label><input type="text" class="port-title" value="Классическое наращивание"></div><div class="admin-group"><label>Подпись</label><input type="text" class="port-subtitle" value="Естественный эффект"></div></div>
+<div class="portfolio-editor" data-index="1"><button class="delete-section-btn" title="Удалить работу"><i class="fas fa-times"></i></button><h4>Работа 2</h4><div class="admin-group"><label>Изображение</label><div class="image-upload-area" data-target="port1"><input type="file" accept="image/*"><i class="fas fa-camera"></i><p>Нажмите чтобы выбрать фото</p></div><input type="hidden" class="port-img" value="https://kimi-web-img.moonshot.cn/img/img.freepik.com/0f4a426ef5c7682bdf2276233c799456c02939a2.jpg"></div><div class="admin-group"><label>Название работы</label><input type="text" class="port-title" value="3D Объём"></div><div class="admin-group"><label>Подпись</label><input type="text" class="port-subtitle" value="Яркий взгляд"></div></div>
+<div class="portfolio-editor" data-index="2"><h4>Работа 3</h4><div class="admin-group"><label>URL изображения</label><input type="url" class="port-img" value="https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=600&q=80"></div><div class="admin-group"><label>Название работы</label><input type="text" class="port-title" value="Hollywood 5D"></div><div class="admin-group"><label>Подпись</label><input type="text" class="port-subtitle" value="Максимальный объём"></div></div>
+<div class="portfolio-editor" data-index="3"><button class="delete-section-btn" title="Удалить работу"><i class="fas fa-times"></i></button><h4>Работа 4</h4><div class="admin-group"><label>Изображение</label><div class="image-upload-area" data-target="port3"><input type="file" accept="image/*"><i class="fas fa-camera"></i><p>Нажмите чтобы выбрать фото</p></div><input type="hidden" class="port-img" value="https://kimi-web-img.moonshot.cn/img/images.squarespace-cdn.com/ae189a9b56e1b94eb80bf798f8e61291b862cadf.JPG"></div><div class="admin-group"><label>Название работы</label><input type="text" class="port-title" value="Ламинирование"></div><div class="admin-group"><label>Подпись</label><input type="text" class="port-subtitle" value="Натуральная красота"></div></div>
+</div>
+<button class="add-btn" id="addPortfolioItem"><i class="fas fa-plus"></i> Добавить работу</button>
+<button class="admin-btn" id="savePortfolio">Сохранить портфолио</button>
+</div>
+
+<div class="admin-tab-content" id="tab-sections">
+<div class="admin-notice"><i class="fas fa-info-circle"></i>Нажмите на раздел, чтобы скрыть или показать его на сайте. Изменения применяются мгновенно.</div>
+<div class="admin-section-title">Стандартные разделы</div>
+<div id="sectionsEditor">
+<div class="section-toggle" data-section="about">
+<div class="section-toggle-left"><div class="section-toggle-icon"><i class="fas fa-user"></i></div><div class="section-toggle-name">О мастере</div></div>
+<div class="section-toggle-status">Включено</div>
+</div>
+<div class="section-toggle" data-section="services">
+<div class="section-toggle-left"><div class="section-toggle-icon"><i class="fas fa-list"></i></div><div class="section-toggle-name">Услуги</div></div>
+<div class="section-toggle-status">Включено</div>
+</div>
+<div class="section-toggle" data-section="portfolio">
+<div class="section-toggle-left"><div class="section-toggle-icon"><i class="fas fa-images"></i></div><div class="section-toggle-name">Портфолио</div></div>
+<div class="section-toggle-status">Включено</div>
+</div>
+<div class="section-toggle" data-section="reviews">
+<div class="section-toggle-left"><div class="section-toggle-icon"><i class="fas fa-comments"></i></div><div class="section-toggle-name">Отзывы</div></div>
+<div class="section-toggle-status">Включено</div>
+</div>
+<div class="section-toggle" data-section="booking">
+<div class="section-toggle-left"><div class="section-toggle-icon"><i class="fas fa-calendar-check"></i></div><div class="section-toggle-name">Запись</div></div>
+<div class="section-toggle-status">Включено</div>
+</div>
+</div>
+<div class="admin-section-title">Пользовательские разделы</div>
+<div id="customSectionsEditor"></div>
+<div class="new-section-placeholder" id="addCustomSection">
+<i class="fas fa-plus-circle"></i>
+<p>Добавить новый раздел</p>
+</div>
+</div>
+
+<div class="admin-tab-content" id="tab-contacts">
+<div class="admin-notice"><i class="fas fa-info-circle"></i>Обновите контактные данные. Они отображаются в разделе записи и футере.</div>
+<div class="admin-section-title">Телефон и мессенджеры</div>
+<div class="admin-group"><label>Телефон</label><input type="tel" id="adminPhone" value="+375 (29) 123-45-67"></div>
+<div class="admin-group"><label>WhatsApp (если отличается)</label><input type="tel" id="adminWhatsApp" value="+375 (29) 123-45-67"></div>
+<div class="admin-section-title">Адрес и время</div>
+<div class="admin-group"><label>Адрес</label><input type="text" id="adminAddress" value="г. Минск, ул. Пушкина, 15"></div>
+<div class="admin-group"><label>Режим работы</label><input type="text" id="adminHours" value="Ежедневно: 10:00 — 21:00"></div>
+<div class="admin-section-title">Социальные сети</div>
+<div class="admin-group"><label>Instagram</label><input type="url" id="adminInsta" value="#" placeholder="https://instagram.com/..."></div>
+<div class="admin-group"><label>Telegram</label><input type="url" id="adminTelegram" value="#" placeholder="https://t.me/..."></div>
+<div class="admin-group"><label>VK</label><input type="url" id="adminVK" value="#" placeholder="https://vk.com/..."></div>
+<button class="admin-btn" id="saveContacts">Сохранить контакты</button>
+</div>
+</div>
+</div>
+
+<!-- SITE CONTENT -->
+<nav class="navbar" id="navbar">
+<a href="#" class="logo" id="siteLogo">LASH <span>Studio</span></a>
+<ul class="nav-links" id="navLinks"><li><a href="#about">О нас</a></li><li><a href="#services">Услуги</a></li><li><a href="#portfolio">Портфолио</a></li><li><a href="#reviews">Отзывы</a></li><li><a href="#booking">Записаться</a></li></ul>
+<button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button>
+</nav>
+
+<section class="hero" id="hero">
+<div class="hero-content">
+<p class="hero-subtitle" id="heroSubtitle">Премиум класса</p>
+<h1 class="hero-title" id="heroTitle">Наращивание<br>ресниц <span>мечты</span></h1>
+<p class="hero-desc" id="heroDesc">Создаю идеальный взгляд, который подчеркнёт вашу естественную красоту. Индивидуальный подход и только качественные материалы.</p>
+<a href="#booking" class="hero-btn" id="heroBtn">Записаться онлайн</a>
+</div>
+<div class="scroll-indicator" id="scrollIndicator"><i class="fas fa-chevron-down"></i></div>
+</section>
+
+<section class="section" id="about">
+<div class="about">
+<div class="about-image reveal"><img id="masterPhoto" src="https://kimi-web-img.moonshot.cn/img/www.thelashlounge.com/fd0c3782073d8c59a12fe29f6e69c4afb92c0b3a.jpg" alt="Мастер по наращиванию ресниц"></div>
+<div class="about-content reveal">
+<p class="section-label">О студии</p>
+<h3>Ваш личный мастер<br>по наращиванию ресниц</h3>
+<p id="aboutText1">Привет! Меня зовут Анастасия, и я профессиональный lash-мастер с 5-летним опытом работы. Моя цель — создать для вас идеальный взгляд, который будет выглядеть естественно и эффектно одновременно.</p>
+<p id="aboutText2">Я работаю только с премиальными материалами от ведущих производителей и постоянно повышаю квалификацию, изучая новейшие техники наращивания. Каждая клиентка для меня — это индивидуальность, требующая особого подхода.</p>
+<div class="about-features">
+<div class="about-feature"><i class="fas fa-gem"></i><div><h4>Премиум материалы</h4><p>Только лучшие ресницы и клеи</p></div></div>
+<div class="about-feature"><i class="fas fa-certificate"></i><div><h4>Сертифицированный мастер</h4><p>Международные дипломы</p></div></div>
+<div class="about-feature"><i class="fas fa-heart"></i><div><h4>Индивидуальный подход</h4><p>Подбор под ваш тип глаз</p></div></div>
+<div class="about-feature"><i class="fas fa-shield-alt"></i><div><h4>Безопасность</h4><p>Стерильность и гипоаллергенность</p></div></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="services-section" id="services">
+<div class="section-header reveal"><p class="section-label">Прайс-лист</p><h2 class="section-title">Наши <span>услуги</span></h2><div class="divider"></div></div>
+<div class="services-grid" id="servicesGrid">
+<div class="service-card reveal" data-svc="0"><div class="service-icon"><i class="fas fa-eye"></i></div><h3>Классическое</h3><p>Один к одному — идеально для первого наращивания. Естественный эффект, подходит для повседневного образа.</p><div class="service-price">150 BYN <span>/ процедура</span></div></div>
+<div class="service-card reveal" data-svc="1"><div class="service-icon"><i class="fas fa-feather-alt"></i></div><h3>2D Объёмное</h3><p>Два реснички на одну натуральную. Выразительный взгляд с лёгким эффектом накрашенных ресниц.</p><div class="service-price">200 BYN <span>/ процедура</span></div></div>
+<div class="service-card reveal" data-svc="2"><div class="service-icon"><i class="fas fa-star"></i></div><h3>3D Объёмное</h3><p>Три реснички на одну натуральную. Яркий, насыщенный взгляд для особых случаев и фотосессий.</p><div class="service-price">250 BYN <span>/ процедура</span></div></div>
+<div class="service-card reveal" data-svc="3"><div class="service-icon"><i class="fas fa-crown"></i></div><h3>4D-5D Hollywood</h3><p>Максимальный объём и пушистость. Эффект накладных ресниц без тяжести и дискомфорта.</p><div class="service-price">300 BYN <span>/ процедура</span></div></div>
+<div class="service-card reveal" data-svc="4"><div class="service-icon"><i class="fas fa-magic"></i></div><h3>Ламинирование</h3><p>Процедура для натуральных ресниц: подкручивание, окрашивание и питание. Эффект до 8 недель.</p><div class="service-price">180 BYN <span>/ процедура</span></div></div>
+<div class="service-card reveal" data-svc="5"><div class="service-icon"><i class="fas fa-sync-alt"></i></div><h3>Коррекция</h3><p>Обновление наращенных ресниц через 2-3 недели. Удаление отросших и добавление новых.</p><div class="service-price">от 100 BYN <span>/ процедура</span></div></div>
+</div>
+</section>
+
+<section class="section" id="portfolio">
+<div class="section-header reveal"><p class="section-label">Галерея</p><h2 class="section-title">Наши <span>работы</span></h2><div class="divider"></div></div>
+<div class="portfolio-grid" id="portfolioGrid">
+<div class="portfolio-item reveal" data-port="0"><img src="https://kimi-web-img.moonshot.cn/img/simplygorgeousbyerin.com/edd06d8d7063001ad27094c1c9cdee4e950a56a2.jpg" alt="Классическое наращивание"><div class="portfolio-overlay"><h4>Классическое наращивание</h4><p>Естественный эффект</p></div></div>
+<div class="portfolio-item reveal" data-port="1"><img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/0f4a426ef5c7682bdf2276233c799456c02939a2.jpg" alt="3D Объём"><div class="portfolio-overlay"><h4>3D Объём</h4><p>Яркий взгляд</p></div></div>
+<div class="portfolio-item reveal" data-port="2"><img src="https://kimi-web-img.moonshot.cn/img/fluffylashes.com/997cef9d52e938ce3a166c46583880b1a72a696a.jpg" alt="Hollywood 5D"><div class="portfolio-overlay"><h4>Hollywood 5D</h4><p>Максимальный объём</p></div></div>
+<div class="portfolio-item reveal" data-port="3"><img src="https://kimi-web-img.moonshot.cn/img/images.squarespace-cdn.com/ae189a9b56e1b94eb80bf798f8e61291b862cadf.JPG" alt="Ламинирование"><div class="portfolio-overlay"><h4>Ламинирование</h4><p>Натуральная красота</p></div></div>
+</div>
+</section>
+
+<section class="reviews-section" id="reviews">
+<div class="section-header reveal"><p class="section-label">Отзывы</p><h2 class="section-title">Что говорят <span>клиентки</span></h2><div class="divider"></div></div>
+<div class="reviews-slider">
+<div class="review-card active" data-rev="0" id="reviewCard0"><div class="review-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><p class="review-text">"Хожу к Насте уже больше года и ни разу не пожалела! Ресницы держатся идеально, а взгляд получается просто волшебным. Она всегда подбирает форму именно под мои глаза."</p><p class="review-author">— Екатерина М.</p></div>
+<div class="review-card" data-rev="1" id="reviewCard1"><div class="review-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><p class="review-text">"Наконец-то нашла своего мастера! Очень аккуратная работа, никакого дискомфорта во время процедуры. Реснички выглядят натурально, но при этом очень выразительно."</p><p class="review-author">— Анна С.</p></div>
+<div class="review-card" data-rev="2" id="reviewCard2"><div class="review-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><p class="review-text">"Пробовала много мастеров, но здесь — совершенно другой уровень. 3D объём держится больше месяца! Атмосфера в студии очень уютная и расслабляющая."</p><p class="review-author">— Марина К.</p></div>
+<div class="review-dots"><div class="review-dot active" data-index="0"></div><div class="review-dot" data-index="1"></div><div class="review-dot" data-index="2"></div></div>
+</div>
+</section>
+
+<section class="booking-section" id="booking">
+<div class="booking-container">
+<div class="booking-info reveal"><p class="section-label">Запись</p><h2>Запишитесь на <span>процедуру</span></h2><p>Выберите удобную дату и время, и я свяжусь с вами для подтверждения записи. Если у вас остались вопросы — напишите мне, я с радостью отвечу!</p>
+<div class="booking-contacts">
+<div class="booking-contact"><i class="fas fa-phone"></i><div><h4>Телефон</h4><p id="contactPhone">+375 (29) 123-45-67</p></div></div>
+<div class="booking-contact"><i class="fab fa-whatsapp"></i><div><h4>WhatsApp</h4><p id="contactWhatsApp">+375 (29) 123-45-67</p></div></div>
+<div class="booking-contact"><i class="fas fa-map-marker-alt"></i><div><h4>Адрес</h4><p id="contactAddress">г. Минск, ул. Пушкина, 15</p></div></div>
+<div class="booking-contact"><i class="far fa-clock"></i><div><h4>Режим работы</h4><p id="contactHours">Ежедневно: 10:00 — 21:00</p></div></div>
+</div></div>
+<div class="booking-form reveal"><h3>Онлайн-запись</h3><p>Заполните форму ниже</p>
+<form id="bookingForm">
+<div class="form-row"><div class="form-group"><label>Ваше имя</label><input type="text" id="name" placeholder="Введите имя" required></div><div class="form-group"><label>Телефон</label><input type="tel" id="phone" placeholder="+375 (__) ___-__-__" required></div></div>
+<div class="form-group"><label>Услуга</label><select id="service" required><option value="">Выберите услугу</option><option value="classic">Классическое наращивание — 150 BYN</option><option value="2d">2D Объёмное — 200 BYN</option><option value="3d">3D Объёмное — 250 BYN</option><option value="hollywood">4D-5D Hollywood — 300 BYN</option><option value="lamination">Ламинирование — 180 BYN</option><option value="correction">Коррекция — от 100 BYN</option></select></div>
+<div class="form-row"><div class="form-group"><label>Дата</label><input type="date" id="date" required></div><div class="form-group"><label>Время</label><select id="time" required><option value="">Сначала выберите дату</option></select></div></div>
+<div class="form-group"><label>Комментарий</label><textarea id="comment" placeholder="Особые пожелания, аллергии и т.д."></textarea></div>
+<button type="submit" class="submit-btn">Записаться</button>
+</form></div>
+</div>
+</section>
+
+<div id="customSectionsContainer"></div>
+<footer class="footer">
+<div class="footer-logo" id="footerLogo">LASH <span>Studio</span></div>
+<div class="footer-social">
+<a href="#" id="footerInsta"><i class="fab fa-instagram"></i></a>
+<a href="#" id="footerTelegram"><i class="fab fa-telegram"></i></a>
+<a href="#" id="footerWhatsApp"><i class="fab fa-whatsapp"></i></a>
+<a href="#" id="footerVK"><i class="fab fa-vk"></i></a>
+</div>
+<div class="footer-links"><a href="#about">О нас</a><a href="#services">Услуги</a><a href="#portfolio">Портфолио</a><a href="#reviews">Отзывы</a><a href="#booking">Запись</a><a href="#" id="footerAdminLink"><i class="fas fa-cog"></i>Админ</a></div>
+<div class="footer-copy">© 2024 Lash Studio. Все права защищены.</div>
+</footer>
+
+<div class="modal-overlay" id="modalOverlay"><div class="modal"><i class="far fa-check-circle"></i><h3>Запись отправлена!</h3><p>Спасибо за запись! Я свяжусь с вами в ближайшее время для подтверждения времени и даты процедуры.</p><button class="modal-btn" id="modalClose">Отлично</button></div></div>
+
+<script>
+const adminPassword='22300';
+const passwordOverlay=document.getElementById('passwordOverlay');
+const adminPanel=document.getElementById('adminPanel');
+const adminOverlay=document.getElementById('adminOverlay');
+const passwordInput=document.getElementById('adminPassword');
+const passwordSubmit=document.getElementById('passwordSubmit');
+const passwordError=document.getElementById('passwordError');
+const adminClose=document.getElementById('adminClose');
+const footerAdminLink=document.getElementById('footerAdminLink');
+
+function openAdmin(){passwordOverlay.classList.add('active');passwordInput.value='';passwordError.classList.remove('active');setTimeout(()=>passwordInput.focus(),100);}
+function closePasswordOverlay(){passwordOverlay.classList.remove('active');}
+function openAdminPanel(){closePasswordOverlay();adminPanel.classList.add('open');adminOverlay.classList.add('active');}
+function closeAdminPanel(){adminPanel.classList.remove('open');adminOverlay.classList.remove('active');}
+function checkPassword(){if(passwordInput.value===adminPassword){openAdminPanel();}else{passwordError.classList.add('active');passwordInput.value='';passwordInput.focus();}}
+
+footerAdminLink.addEventListener('click',(e)=>{e.preventDefault();openAdmin();});
+passwordSubmit.addEventListener('click',checkPassword);
+passwordInput.addEventListener('keydown',(e)=>{if(e.key==='Enter')checkPassword();});
+adminClose.addEventListener('click',closeAdminPanel);
+adminOverlay.addEventListener('click',closeAdminPanel);
+
+document.querySelectorAll('.admin-tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.admin-tab-content').forEach(c=>c.classList.remove('active'));tab.classList.add('active');document.getElementById('tab-'+tab.dataset.tab).classList.add('active');});});
+
+const colorPreviewGold=document.getElementById('colorPreviewGold');
+const colorPreviewBlack=document.getElementById('colorPreviewBlack');
+const adminColorGold=document.getElementById('adminColorGold');
+const adminColorBlack=document.getElementById('adminColorBlack');
+
+adminColorGold.addEventListener('input',(e)=>{colorPreviewGold.style.background=e.target.value;document.documentElement.style.setProperty('--gold',e.target.value);});
+adminColorBlack.addEventListener('input',(e)=>{colorPreviewBlack.style.background=e.target.value;document.documentElement.style.setProperty('--black',e.target.value);});
+
+document.getElementById('saveGeneral').addEventListener('click',()=>{
+document.getElementById('siteLogo').innerHTML=document.getElementById('adminStudioName').value+' <span>'+document.getElementById('adminStudioTagline').value+'</span>';
+document.getElementById('footerLogo').innerHTML=document.getElementById('adminStudioName').value+' <span>'+document.getElementById('adminStudioTagline').value+'</span>';
+document.getElementById('heroSubtitle').textContent=document.getElementById('adminHeroSubtitle').value;
+const t1=document.getElementById('adminHeroTitle1').value;
+const t2=document.getElementById('adminHeroTitle2').value;
+const words=t2.split(' ');
+const lastWord=words.pop();
+const restWords=words.join(' ');
+if(restWords){document.getElementById('heroTitle').innerHTML=t1+'<br>'+restWords+' <span>'+lastWord+'</span>';}else{document.getElementById('heroTitle').innerHTML=t1+'<br><span>'+t2+'</span>';}
+document.getElementById('heroDesc').textContent=document.getElementById('adminHeroDesc').value;
+document.getElementById('heroBtn').textContent=document.getElementById('adminHeroBtn').value;
+const heroBgVal=document.getElementById('adminHeroBg').value;
+if(heroBgVal){document.getElementById('hero').style.background='linear-gradient(135deg,rgba(26,26,26,0.7) 0%,rgba(45,45,45,0.5) 100%),url('+heroBgVal+') center/cover';}
+document.getElementById('aboutText1').textContent=document.getElementById('adminAboutText1').value;
+document.getElementById('aboutText2').textContent=document.getElementById('adminAboutText2').value;
+const masterVal=document.getElementById('adminMasterPhoto').value;
+if(masterVal){document.getElementById('masterPhoto').src=masterVal;}
+showModal('Настройки сохранены!');
+});
+
+document.getElementById('resetGeneral').addEventListener('click',()=>{
+document.getElementById('adminStudioName').value='LASH';
+document.getElementById('adminStudioTagline').value='Studio';
+document.getElementById('adminHeroSubtitle').value='Премиум класса';
+document.getElementById('adminHeroTitle1').value='Наращивание ресниц';
+document.getElementById('adminHeroTitle2').value='мечты';
+document.getElementById('adminHeroDesc').value='Создаю идеальный взгляд, который подчеркнёт вашу естественную красоту. Индивидуальный подход и только качественные материалы.';
+document.getElementById('adminHeroBtn').value='Записаться онлайн';
+document.getElementById('adminHeroBg').value='https://kimi-web-img.moonshot.cn/img/cdn.shopify.com/4c0b560e4b8b776648fb2cfdf4ecaa95e0fd2567.jpg';
+document.getElementById('adminAboutText1').value='Привет! Меня зовут Анастасия, и я профессиональный lash-мастер с 5-летним опытом работы. Моя цель — создать для вас идеальный взгляд, который будет выглядеть естественно и эффектно одновременно.';
+document.getElementById('adminAboutText2').value='Я работаю только с премиальными материалами от ведущих производителей и постоянно повышаю квалификацию, изучая новейшие техники наращивания. Каждая клиентка для меня — это индивидуальность, требующая особого подхода.';
+document.getElementById('adminMasterPhoto').value='https://kimi-web-img.moonshot.cn/img/www.thelashlounge.com/fd0c3782073d8c59a12fe29f6e69c4afb92c0b3a.jpg';
+adminColorGold.value='#c9a96e';colorPreviewGold.style.background='#c9a96e';document.documentElement.style.setProperty('--gold','#c9a96e');
+adminColorBlack.value='#1a1a1a';colorPreviewBlack.style.background='#1a1a1a';document.documentElement.style.setProperty('--black','#1a1a1a');
+document.getElementById('saveGeneral').click();
+});
+
+document.getElementById('saveServices').addEventListener('click',()=>{
+document.querySelectorAll('.service-editor').forEach((ed,i)=>{
+const card=document.querySelector('.service-card[data-svc="'+i+'"]');
+if(card){card.querySelector('h3').textContent=ed.querySelector('.svc-name').value;card.querySelector('p').textContent=ed.querySelector('.svc-desc').value;card.querySelector('.service-price').innerHTML=ed.querySelector('.svc-price').value+' <span>/ процедура</span>';card.querySelector('.service-icon i').className=ed.querySelector('.svc-icon').value;}
+});
+showModal('Услуги обновлены!');
+});
+
+document.getElementById('saveReviews').addEventListener('click',()=>{
+document.querySelectorAll('.review-editor').forEach((ed,i)=>{
+const card=document.querySelector('.review-card[data-rev="'+i+'"]');
+if(card&&!ed.classList.contains('deleted')){card.querySelector('.review-text').textContent='"'+ed.querySelector('.review-text').value+'"';card.querySelector('.review-author').textContent=ed.querySelector('.review-author').value;}
+});
+showModal('Отзывы обновлены!');
+});
+
+document.querySelectorAll('.delete-btn').forEach(btn=>{
+btn.addEventListener('click',()=>{
+const idx=btn.dataset.review;
+const editor=document.querySelector('.review-editor[data-index="'+idx+'"]');
+const card=document.querySelector('.review-card[data-rev="'+idx+'"]');
+if(editor.classList.contains('deleted')){
+editor.classList.remove('deleted');
+btn.innerHTML='<i class="fas fa-trash"></i> Удалить отзыв';
+btn.style.background='#e74c3c';
+if(card)card.classList.remove('hidden');
+}else{
+editor.classList.add('deleted');
+btn.innerHTML='<i class="fas fa-undo"></i> Восстановить';
+btn.style.background='#27ae60';
+if(card)card.classList.add('hidden');
+}
+updateReviewSlider();
+});
+});
+
+document.getElementById('addReview').addEventListener('click',()=>{
+const editorsContainer=document.getElementById('reviewsEditor');
+const newIndex=editorsContainer.querySelectorAll('.review-editor').length;
+const newEditor=document.createElement('div');
+newEditor.className='review-editor';
+newEditor.dataset.index=newIndex;
+newEditor.innerHTML='<h4>Отзыв '+(newIndex+1)+'</h4><button class="delete-btn" data-review="'+newIndex+'"><i class="fas fa-trash"></i> Удалить отзыв</button><div class="admin-group"><label>Текст отзыва</label><textarea class="review-text">"Новый отзыв клиента..."</textarea></div><div class="admin-group"><label>Имя клиентки</label><input type="text" class="review-author" value="— Имя К."></div>';
+editorsContainer.appendChild(newEditor);
+newEditor.querySelector('.delete-btn').addEventListener('click',function(){
+const idx=this.dataset.review;
+const editor=document.querySelector('.review-editor[data-index="'+idx+'"]');
+if(editor.classList.contains('deleted')){
+editor.classList.remove('deleted');
+this.innerHTML='<i class="fas fa-trash"></i> Удалить отзыв';
+this.style.background='#e74c3c';
+}else{
+editor.classList.add('deleted');
+this.innerHTML='<i class="fas fa-undo"></i> Восстановить';
+this.style.background='#27ae60';
+}
+});
+const slider=document.querySelector('.reviews-slider');
+const dotsContainer=document.querySelector('.review-dots');
+const newCard=document.createElement('div');
+newCard.className='review-card';
+newCard.dataset.rev=newIndex;
+newCard.id='reviewCard'+newIndex;
+newCard.innerHTML='<div class="review-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div><p class="review-text">"Новый отзыв клиента..."</p><p class="review-author">— Имя К.</p>';
+slider.insertBefore(newCard,dotsContainer);
+const newDot=document.createElement('div');
+newDot.className='review-dot';
+newDot.dataset.index=newIndex;
+newDot.addEventListener('click',()=>{clearInterval(reviewInterval);showReview(parseInt(newDot.dataset.index));startReviewSlider();});
+dotsContainer.appendChild(newDot);
+updateReviewSlider();
+showModal('Отзыв добавлен!');
+});
+
+function updateReviewSlider(){
+const visibleCards=document.querySelectorAll('.review-card:not(.hidden)');
+if(visibleCards.length>0){showReview(0);}
+}
+
+document.getElementById('savePortfolio').addEventListener('click',()=>{
+document.querySelectorAll('.portfolio-editor').forEach((ed,i)=>{
+const item=document.querySelector('.portfolio-item[data-port="'+i+'"]');
+if(item){
+const imgVal=ed.querySelector('.port-img').value;
+if(imgVal){item.querySelector('img').src=imgVal;}
+item.querySelector('img').alt=ed.querySelector('.port-title').value;
+item.querySelector('.portfolio-overlay h4').textContent=ed.querySelector('.port-title').value;
+item.querySelector('.portfolio-overlay p').textContent=ed.querySelector('.port-subtitle').value;
+}
+});
+showModal('Портфолио обновлено!');
+});
+
+document.getElementById('addPortfolioItem').addEventListener('click',()=>{
+const editorContainer=document.getElementById('portfolioEditor');
+const gridContainer=document.getElementById('portfolioGrid');
+const newIndex=editorContainer.querySelectorAll('.portfolio-editor').length;
+const editor=document.createElement('div');
+editor.className='portfolio-editor';
+editor.dataset.index=newIndex;
+editor.innerHTML='<button class="delete-section-btn" title="Удалить работу"><i class="fas fa-times"></i></button><h4>Работа '+(newIndex+1)+'</h4><div class="admin-group"><label>Изображение</label><div class="image-upload-area" data-target="port'+newIndex+'"><input type="file" accept="image/*"><i class="fas fa-camera"></i><p>Нажмите чтобы выбрать фото</p></div><input type="hidden" class="port-img" value=""></div><div class="admin-group"><label>Название работы</label><input type="text" class="port-title" value="Новая работа"></div><div class="admin-group"><label>Подпись</label><input type="text" class="port-subtitle" value="Описание"></div></div>';
+editorContainer.appendChild(editor);
+const item=document.createElement('div');
+item.className='portfolio-item reveal';
+item.dataset.port=newIndex;
+item.innerHTML='<img src="" alt="Новая работа"><div class="portfolio-overlay"><h4>Новая работа</h4><p>Описание</p></div></div>';
+gridContainer.appendChild(item);
+editor.querySelector('.delete-section-btn').addEventListener('click',()=>{
+if(confirm('Удалить эту работу?')){editor.remove();item.remove();}
+});
+setupImageUploads();
+revealObserver.observe(item);
+showModal('Работа добавлена!');
+});
+
+document.querySelectorAll('.portfolio-editor').forEach(ed=>{
+if(!ed.querySelector('.delete-section-btn')){
+const btn=document.createElement('button');
+btn.className='delete-section-btn';
+btn.title='Удалить работу';
+btn.innerHTML='<i class="fas fa-times"></i>';
+btn.addEventListener('click',()=>{
+if(confirm('Удалить эту работу?')){
+const idx=ed.dataset.index;
+const item=document.querySelector('.portfolio-item[data-port="'+idx+'"]');
+ed.remove();
+if(item)item.remove();
+}
+});
+ed.insertBefore(btn,ed.firstChild);
+}
+});
+
+document.getElementById('saveContacts').addEventListener('click',()=>{
+document.getElementById('contactPhone').textContent=document.getElementById('adminPhone').value;
+document.getElementById('contactWhatsApp').textContent=document.getElementById('adminWhatsApp').value;
+document.getElementById('contactAddress').textContent=document.getElementById('adminAddress').value;
+document.getElementById('contactHours').textContent=document.getElementById('adminHours').value;
+document.getElementById('footerInsta').href=document.getElementById('adminInsta').value;
+document.getElementById('footerTelegram').href=document.getElementById('adminTelegram').value;
+document.getElementById('footerVK').href=document.getElementById('adminVK').value;
+showModal('Контакты сохранены!');
+});
+
+const reviewCards=document.querySelectorAll('.review-card');
+const reviewDots=document.querySelectorAll('.review-dot');
+let currentReview=0;
+let reviewInterval;
+function showReview(index){reviewCards.forEach(c=>c.classList.remove('active'));reviewDots.forEach(d=>d.classList.remove('active'));reviewCards[index].classList.add('active');reviewDots[index].classList.add('active');currentReview=index;}
+function nextReview(){showReview((currentReview+1)%reviewCards.length);}
+function startReviewSlider(){reviewInterval=setInterval(nextReview,5000);}
+reviewDots.forEach(dot=>{dot.addEventListener('click',()=>{clearInterval(reviewInterval);showReview(parseInt(dot.dataset.index));startReviewSlider();});});
+startReviewSlider();
+
+const timeSlots=['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+document.getElementById('date').addEventListener('change',()=>{if(document.getElementById('date').value){document.getElementById('time').innerHTML='<option value="">Выберите время</option>';timeSlots.forEach(t=>{document.getElementById('time').innerHTML+='<option value="'+t+'">'+t+'</option>';});}});
+
+document.getElementById('bookingForm').addEventListener('submit',(e)=>{e.preventDefault();document.getElementById('modalOverlay').classList.add('active');document.getElementById('bookingForm').reset();document.getElementById('time').innerHTML='<option value="">Сначала выберите дату</option>';});
+document.getElementById('modalClose').addEventListener('click',()=>{document.getElementById('modalOverlay').classList.remove('active');});
+document.getElementById('modalOverlay').addEventListener('click',(e)=>{if(e.target===document.getElementById('modalOverlay'))document.getElementById('modalOverlay').classList.remove('active');});
+
+function showModal(text){
+const modal=document.querySelector('.modal');
+modal.querySelector('h3').textContent=text;
+modal.querySelector('p').style.display='none';
+modal.querySelector('.modal-btn').textContent='OK';
+document.getElementById('modalOverlay').classList.add('active');
+document.getElementById('modalClose').onclick=()=>{document.getElementById('modalOverlay').classList.remove('active');setTimeout(()=>{modal.querySelector('p').style.display='';modal.querySelector('h3').textContent='Запись отправлена!';modal.querySelector('.modal-btn').textContent='Отлично';},300);};
+}
+
+window.addEventListener('scroll',()=>{if(window.scrollY>50)document.getElementById('navbar').classList.add('scrolled');else document.getElementById('navbar').classList.remove('scrolled');});
+
+document.getElementById('mobileMenuBtn').addEventListener('click',()=>{document.getElementById('navLinks').classList.toggle('active');});
+document.querySelectorAll('.nav-links a').forEach(link=>{link.addEventListener('click',()=>{document.getElementById('navLinks').classList.remove('active');});});
+
+const revealObserver=new IntersectionObserver((entries)=>{entries.forEach(entry=>{if(entry.isIntersecting)entry.target.classList.add('active');});},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
+
+document.querySelectorAll('a[href^="#"]').forEach(anchor=>{anchor.addEventListener('click',function(e){e.preventDefault();const href=this.getAttribute('href');if(href&&href!=='#'){const target=document.querySelector(href);if(target)target.scrollIntoView({behavior:'smooth'});}});});
+document.querySelectorAll('a[href="#"]').forEach(link=>{link.addEventListener('click',(e)=>{e.preventDefault();});});
+document.getElementById('scrollIndicator').addEventListener('click',()=>{document.getElementById('about').scrollIntoView({behavior:'smooth'});});
+
+// ===================== IMAGE UPLOAD =====================
+function handleImageUpload(fileInput,callback){
+const file=fileInput.files[0];
+if(!file)return;
+const reader=new FileReader();
+reader.onload=function(e){const dataUrl=e.target.result;callback(dataUrl);};
+reader.readAsDataURL(file);
+}
+
+function setupImageUploads(){
+document.querySelectorAll('.image-upload-area').forEach(area=>{
+let fileInput=area.querySelector('input[type="file"]');
+if(!fileInput){
+fileInput=document.createElement('input');
+fileInput.type='file';
+fileInput.accept='image/*';
+area.insertBefore(fileInput,area.firstChild);
+}
+const newInput=fileInput.cloneNode(true);
+fileInput.parentNode.replaceChild(newInput,fileInput);
+newInput.addEventListener('change',function(){
+handleImageUpload(this,function(dataUrl){
+area.classList.add('has-image');
+newInput.style.position='absolute';
+newInput.style.opacity='0';
+newInput.style.width='100%';
+newInput.style.height='100%';
+newInput.style.zIndex='2';
+newInput.style.cursor='pointer';
+let preview=area.querySelector('.image-upload-preview');
+if(!preview){preview=document.createElement('div');preview.className='image-upload-preview';area.appendChild(preview);}
+preview.innerHTML='<img src="'+dataUrl+'" alt="Preview"><button class="remove-img" title="Удалить/заменить фото" type="button"><i class="fas fa-sync-alt"></i></button>';
+const hiddenInput=area.parentElement.querySelector('input[type="hidden"],input[type="url"]');
+if(hiddenInput)hiddenInput.value=dataUrl;
+preview.querySelector('.remove-img').addEventListener('click',function(e){e.preventDefault();e.stopPropagation();newInput.value='';newInput.click();});
+});
+});
+});
+}
+
+setupImageUploads();
+const uploadObserver=new MutationObserver(()=>{setupImageUploads();});
+uploadObserver.observe(document.getElementById('adminPanel'),{childList:true,subtree:true});
+
+// ===================== SECTIONS TOGGLE =====================
+document.querySelectorAll('.section-toggle').forEach(toggle=>{
+toggle.addEventListener('click',()=>{
+const sectionId=toggle.dataset.section;
+const section=document.getElementById(sectionId);
+const statusEl=toggle.querySelector('.section-toggle-status');
+if(toggle.classList.contains('hidden-section')){
+toggle.classList.remove('hidden-section');
+statusEl.textContent='Включено';
+if(section)section.classList.remove('site-section-hidden');
+}else{
+toggle.classList.add('hidden-section');
+statusEl.textContent='Скрыто';
+if(section)section.classList.add('site-section-hidden');
+}
+});
+});
+
+// ===================== CUSTOM SECTIONS =====================
+let customSectionCounter=0;
+const customSectionsEditor=document.getElementById('customSectionsEditor');
+const customSectionsContainer=document.getElementById('customSectionsContainer');
+
+document.getElementById('addCustomSection').addEventListener('click',()=>{
+customSectionCounter++;
+const sectionId='customSection'+customSectionCounter;
+const editor=document.createElement('div');
+editor.className='custom-section-item';
+editor.dataset.sectionId=sectionId;
+editor.innerHTML='<div class="custom-section-editor"><h4>Новый раздел '+customSectionCounter+'</h4><button class="delete-section-btn" title="Удалить раздел"><i class="fas fa-times"></i></button><div class="admin-group"><label>Название раздела</label><input type="text" class="cs-title" value="Новый раздел" placeholder="Введите название"></div><div class="admin-group"><label>Иконка (FontAwesome класс)</label><input type="text" class="cs-icon" value="fas fa-star" placeholder="fas fa-star"></div><div class="admin-group"><label>Изображение раздела</label><div class="image-upload-area" data-target="'+sectionId+'"><input type="file" accept="image/*"><i class="fas fa-camera"></i><p>Нажмите чтобы выбрать фото</p></div><input type="hidden" class="cs-image" value=""></div><div class="admin-group"><label>Содержимое раздела</label><textarea class="cs-content" rows="5" placeholder="Введите текст раздела...">Это пользовательский раздел. Вы можете добавить сюда любой текст, описание акции, информацию о скидках или специальные предложения.</textarea></div><div class="section-actions"><button class="admin-btn save-custom-section">Сохранить раздел</button><button class="delete-btn delete-custom-section">Удалить раздел</button></div></div>';
+customSectionsEditor.appendChild(editor);
+const siteSection=document.createElement('section');
+siteSection.className='site-custom-section';
+siteSection.id=sectionId;
+siteSection.innerHTML='<div class="section-header"><p class="section-label">Раздел</p><h2 class="section-title">Новый раздел</h2><div class="divider"></div></div><div class="cs-image-preview" style="display:none"><img src="" alt=""></div><div class="section-content">Это пользовательский раздел. Вы можете добавить сюда любой текст, описание акции, информацию о скидках или специальные предложения.</div>';
+customSectionsContainer.appendChild(siteSection);
+const navLinks=document.getElementById('navLinks');
+const newNavItem=document.createElement('li');
+newNavItem.innerHTML='<a href="#'+sectionId+'">Новый раздел</a>';
+navLinks.appendChild(newNavItem);
+const footerLinks=document.querySelector('.footer-links');
+const newFooterLink=document.createElement('a');
+newFooterLink.href='#'+sectionId;
+newFooterLink.textContent='Новый раздел';
+footerLinks.insertBefore(newFooterLink,document.getElementById('footerAdminLink'));
+editor.querySelector('.delete-section-btn').addEventListener('click',()=>{deleteCustomSection(sectionId,editor,siteSection,newNavItem,newFooterLink);});
+editor.querySelector('.delete-custom-section').addEventListener('click',()=>{deleteCustomSection(sectionId,editor,siteSection,newNavItem,newFooterLink);});
+editor.querySelector('.save-custom-section').addEventListener('click',()=>{
+const title=editor.querySelector('.cs-title').value;
+const text=editor.querySelector('.cs-content').value;
+const imgUrl=editor.querySelector('.cs-image').value;
+siteSection.querySelector('.section-title').textContent=title;
+siteSection.querySelector('.section-content').textContent=text;
+newNavItem.querySelector('a').textContent=title;
+newFooterLink.textContent=title;
+const imgPreview=siteSection.querySelector('.cs-image-preview');
+const img=imgPreview.querySelector('img');
+if(imgUrl){img.src=imgUrl;imgPreview.style.display='block';}else{imgPreview.style.display='none';}
+showModal('Раздел сохранён!');
+});
+revealObserver.observe(siteSection);
+document.querySelectorAll('a[href^="#"]').forEach(anchor=>{anchor.addEventListener('click',function(e){e.preventDefault();const href=this.getAttribute('href');if(href&&href!=='#'){const target=document.querySelector(href);if(target)target.scrollIntoView({behavior:'smooth'});}});});
+});
+
+function deleteCustomSection(sectionId,editor,siteSection,navItem,footerLink){
+if(confirm('Удалить этот раздел?')){
+editor.remove();
+siteSection.remove();
+navItem.remove();
+footerLink.remove();
+}
+}
+</script>
+</body>
+</html>
